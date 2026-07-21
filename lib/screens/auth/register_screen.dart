@@ -15,6 +15,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -23,7 +24,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  String _friendlyError(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('user already registered') ||
+        lower.contains('already registered')) {
+      return 'An account with this email already exists.';
+    }
+    if (lower.contains('password should be at least')) {
+      return 'Password must be at least 6 characters.';
+    }
+    if (lower.contains('unable to validate email') ||
+        lower.contains('invalid email')) {
+      return 'Please enter a valid email address.';
+    }
+    if (lower.contains('rate limit')) {
+      return 'Too many attempts. Please wait a moment and try again.';
+    }
+    return raw;
+  }
+
   Future<void> _handleRegister() async {
+    setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
@@ -37,15 +58,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (error == null) {
       context.go('/');
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error)));
+      setState(() => _errorMessage = _friendlyError(error));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isLoading = context.watch<AuthProvider>().isLoading;
+    final theme = Theme.of(context);
+    final hasError = _errorMessage != null;
+
+    final errorBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
+    );
 
     return Scaffold(
       body: Center(
@@ -56,18 +82,72 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Register',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                Icon(
+                  Icons.person_add_alt_1_rounded,
+                  size: 56,
+                  color: theme.colorScheme.primary,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                Text(
+                  'Create an account',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Join the community',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                if (hasError)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.error.withOpacity(0.4),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: theme.colorScheme.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: theme.colorScheme.error,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    enabledBorder: hasError ? errorBorder : null,
+                    focusedBorder: hasError ? errorBorder : null,
                   ),
+                  onChanged: (_) {
+                    if (hasError) setState(() => _errorMessage = null);
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty)
                       return 'Email is required';
@@ -76,13 +156,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                // No confirm-password field, per assessment instructions
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    border: const OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    enabledBorder: hasError ? errorBorder : null,
+                    focusedBorder: hasError ? errorBorder : null,
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePassword
@@ -95,6 +176,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                     ),
                   ),
+                  onChanged: (_) {
+                    if (hasError) setState(() => _errorMessage = null);
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty)
                       return 'Password is required';
@@ -103,7 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -113,14 +197,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
                             : const Text('Register'),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () => context.go('/login'),
+                  onPressed: () => context.push('/login'),
                   child: const Text('Already have an account? Login'),
                 ),
               ],

@@ -15,6 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -23,7 +24,22 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  String _friendlyError(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('invalid login credentials')) {
+      return 'Incorrect email or password. Please try again.';
+    }
+    if (lower.contains('email not confirmed')) {
+      return 'Please confirm your email before logging in.';
+    }
+    if (lower.contains('user not found')) {
+      return 'No account found with that email.';
+    }
+    return raw;
+  }
+
   Future<void> _handleLogin() async {
+    setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
@@ -37,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (error == null) {
       context.go('/');
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      setState(() => _errorMessage = _friendlyError(error));
     }
   }
 
@@ -45,6 +61,12 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final isLoading = context.watch<AuthProvider>().isLoading;
     final theme = Theme.of(context);
+    final hasError = _errorMessage != null;
+
+    final errorBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
+    );
 
     return Scaffold(
       body: Center(
@@ -55,27 +77,76 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.forum_rounded, size: 56, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.forum_rounded,
+                  size: 56,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Welcome back',
-                  style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Log in to continue',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.outline),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+
+                // Inline error banner
+                if (hasError)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.error.withOpacity(0.4),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: theme.colorScheme.error,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            _errorMessage!,
+                            style: TextStyle(
+                              color: theme.colorScheme.error,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    enabledBorder: hasError ? errorBorder : null,
+                    focusedBorder: hasError ? errorBorder : null,
                   ),
+                  onChanged: (_) {
+                    if (hasError) setState(() => _errorMessage = null);
+                  },
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Email is required';
+                    if (value == null || value.isEmpty)
+                      return 'Email is required';
                     if (!value.contains('@')) return 'Enter a valid email';
                     return null;
                   },
@@ -87,13 +158,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     prefixIcon: const Icon(Icons.lock_outline),
+                    enabledBorder: hasError ? errorBorder : null,
+                    focusedBorder: hasError ? errorBorder : null,
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed:
+                          () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
                     ),
                   ),
+                  onChanged: (_) {
+                    if (hasError) setState(() => _errorMessage = null);
+                  },
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Password is required';
+                    if (value == null || value.isEmpty)
+                      return 'Password is required';
                     return null;
                   },
                 ),
@@ -102,11 +186,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: isLoading ? null : _handleLogin,
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 20, width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Login'),
+                    child:
+                        isLoading
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text('Login'),
                   ),
                 ),
                 const SizedBox(height: 16),
