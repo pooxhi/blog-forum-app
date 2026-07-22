@@ -938,7 +938,19 @@ class _CommentTileState extends State<_CommentTile> {
                     (context, index) => Padding(
                       padding: const EdgeInsets.only(right: 6, left: 38),
                       child: GestureDetector(
-                        onTap: () => _openImageViewer(comment.imageUrls, index),
+                        onTap:
+                            () => showDialog(
+                              context: context,
+                              builder:
+                                  (context) => Dialog(
+                                    insetPadding: const EdgeInsets.all(12),
+                                    backgroundColor: Colors.transparent,
+                                    child: _ImageViewer(
+                                      images: comment.imageUrls,
+                                      initialPage: index,
+                                    ),
+                                  ),
+                            ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: Image.network(
