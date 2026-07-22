@@ -21,6 +21,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   Post? _post;
   bool _isLoading = true;
   bool _notFound = false;
+  final PageController _imagePageController = PageController();
+  int _currentImageIndex = 0;
 
   final _commentController = TextEditingController();
   final List<File> _commentImages = [];
@@ -35,6 +37,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   @override
   void dispose() {
+    _imagePageController.dispose();
     _commentController.dispose();
     super.dispose();
   }
@@ -191,7 +194,13 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                           fit: StackFit.expand,
                                           children: [
                                             PageView.builder(
+                                              controller: _imagePageController,
                                               itemCount: post.imageUrls.length,
+                                              onPageChanged: (index) {
+                                                setState(() {
+                                                  _currentImageIndex = index;
+                                                });
+                                              },
                                               itemBuilder:
                                                   (context, i) => Image.network(
                                                     post.imageUrls[i],
@@ -208,6 +217,95 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                         ),
                                                   ),
                                             ),
+                                            Positioned(
+                                              left: 12,
+                                              right: 12,
+                                              bottom: 16,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  if (post.imageUrls.length > 1)
+                                                    _circleIconButton(
+                                                      icon: Icons.chevron_left,
+                                                      onPressed: () {
+                                                        if (_currentImageIndex >
+                                                            0) {
+                                                          _imagePageController.animateToPage(
+                                                            _currentImageIndex -
+                                                                1,
+                                                            duration:
+                                                                const Duration(
+                                                                  milliseconds:
+                                                                      250,
+                                                                ),
+                                                            curve:
+                                                                Curves
+                                                                    .easeInOut,
+                                                          );
+                                                        }
+                                                      },
+                                                    ),
+                                                  if (post.imageUrls.length > 1)
+                                                    _circleIconButton(
+                                                      icon: Icons.chevron_right,
+                                                      onPressed: () {
+                                                        if (_currentImageIndex <
+                                                            post
+                                                                    .imageUrls
+                                                                    .length -
+                                                                1) {
+                                                          _imagePageController.animateToPage(
+                                                            _currentImageIndex +
+                                                                1,
+                                                            duration:
+                                                                const Duration(
+                                                                  milliseconds:
+                                                                      250,
+                                                                ),
+                                                            curve:
+                                                                Curves
+                                                                    .easeInOut,
+                                                          );
+                                                        }
+                                                      },
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                            if (post.imageUrls.length > 1)
+                                              Positioned(
+                                                bottom: 16,
+                                                left: 0,
+                                                right: 0,
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: List.generate(
+                                                    post.imageUrls.length,
+                                                    (index) => Container(
+                                                      width: 8,
+                                                      height: 8,
+                                                      margin:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 3,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        color:
+                                                            index ==
+                                                                    _currentImageIndex
+                                                                ? Colors.white
+                                                                : Colors.white
+                                                                    .withOpacity(
+                                                                      0.45,
+                                                                    ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
                                             DecoratedBox(
                                               decoration: BoxDecoration(
                                                 gradient: LinearGradient(
