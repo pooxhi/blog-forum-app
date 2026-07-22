@@ -150,107 +150,110 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               : Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 900),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextFormField(
-                            controller: _titleController,
-                            decoration: const InputDecoration(
-                              labelText: 'Title',
-                              border: OutlineInputBorder(),
+                  child: Scrollbar(
+                    thumbVisibility: true,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextFormField(
+                              controller: _titleController,
+                              decoration: const InputDecoration(
+                                labelText: 'Title',
+                                border: OutlineInputBorder(),
+                              ),
+                              validator:
+                                  (v) =>
+                                      (v == null || v.isEmpty)
+                                          ? 'Title is required'
+                                          : null,
                             ),
-                            validator:
-                                (v) =>
-                                    (v == null || v.isEmpty)
-                                        ? 'Title is required'
-                                        : null,
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _contentController,
-                            decoration: const InputDecoration(
-                              labelText: 'Content',
-                              border: OutlineInputBorder(),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _contentController,
+                              decoration: const InputDecoration(
+                                labelText: 'Content',
+                                border: OutlineInputBorder(),
+                              ),
+                              maxLines: 6,
+                              validator:
+                                  (v) =>
+                                      (v == null || v.isEmpty)
+                                          ? 'Content is required'
+                                          : null,
                             ),
-                            maxLines: 6,
-                            validator:
-                                (v) =>
-                                    (v == null || v.isEmpty)
-                                        ? 'Content is required'
-                                        : null,
-                          ),
-                          const SizedBox(height: 16),
-                          OutlinedButton.icon(
-                            onPressed: _pickImages,
-                            icon: const Icon(Icons.image),
-                            label: const Text('Add Images'),
-                          ),
-                          if (_existingImages.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Current images',
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              onPressed: _pickImages,
+                              icon: const Icon(Icons.image),
+                              label: const Text('Add Images'),
                             ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: List.generate(
-                                _existingImages.length,
-                                (index) => _ImageThumb(
-                                  imageUrl:
-                                      _existingImages[index]['image_url']
-                                          as String,
-                                  onRemove: () => _removeExistingImage(index),
+                            if (_existingImages.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Current images',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: List.generate(
+                                  _existingImages.length,
+                                  (index) => _ImageThumb(
+                                    imageUrl:
+                                        _existingImages[index]['image_url']
+                                            as String,
+                                    onRemove: () => _removeExistingImage(index),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                          if (_newImages.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            const Text(
-                              'New images',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: List.generate(
-                                _newImages.length,
-                                (index) => _ImageThumb(
-                                  xFile: _newImages[index],
-                                  onRemove: () => _removeNewImage(index),
+                            ],
+                            if (_newImages.isNotEmpty) ...[
+                              const SizedBox(height: 12),
+                              const Text(
+                                'New images',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: List.generate(
+                                  _newImages.length,
+                                  (index) => _ImageThumb(
+                                    xFile: _newImages[index],
+                                    onRemove: () => _removeNewImage(index),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _isSubmitting ? null : _handleSubmit,
-                              child:
-                                  _isSubmitting
-                                      ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
+                            ],
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _isSubmitting ? null : _handleSubmit,
+                                child:
+                                    _isSubmitting
+                                        ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                        : Text(
+                                          widget.isEditMode
+                                              ? 'Save Changes'
+                                              : 'Post',
                                         ),
-                                      )
-                                      : Text(
-                                        widget.isEditMode
-                                            ? 'Save Changes'
-                                            : 'Post',
-                                      ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
