@@ -19,6 +19,89 @@ class PostDetailScreen extends StatefulWidget {
   State<PostDetailScreen> createState() => _PostDetailScreenState();
 }
 
+class _ImageViewer extends StatefulWidget {
+  final List<dynamic> images;
+  final int initialPage;
+
+  const _ImageViewer({required this.images, this.initialPage = 0});
+
+  @override
+  State<_ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<_ImageViewer> {
+  late final PageController _controller;
+  late int _page;
+
+  @override
+  void initState() {
+    super.initState();
+    _page = widget.initialPage;
+    _controller = PageController(initialPage: _page);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _buildImage(dynamic src) {
+    if (src is String) {
+      return InteractiveViewer(child: Image.network(src, fit: BoxFit.contain));
+    }
+    if (src is Uint8List) {
+      return InteractiveViewer(child: Image.memory(src, fit: BoxFit.contain));
+    }
+    if (src is File) {
+      return InteractiveViewer(child: Image.file(src, fit: BoxFit.contain));
+    }
+    return const Center(child: Icon(Icons.broken_image));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView.builder(
+                  controller: _controller,
+                  itemCount: widget.images.length,
+                  onPageChanged: (p) => setState(() => _page = p),
+                  itemBuilder:
+                      (context, i) =>
+                          Center(child: _buildImage(widget.images[i])),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${_page + 1} / ${widget.images.length}',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          top: 6,
+          right: 6,
+          child: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _PostDetailScreenState extends State<PostDetailScreen> {
   Post? _post;
   bool _isLoading = true;
@@ -482,6 +565,19 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
+  void _openImageViewer(List<dynamic> images, int initialPage) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(12),
+          backgroundColor: Colors.transparent,
+          child: _ImageViewer(images: images, initialPage: initialPage),
+        );
+      },
+    );
+  }
+
   Widget _buildCommentsList(AuthProvider authProvider) {
     final commentProvider = context.watch<CommentProvider>();
     final comments = commentProvider.commentsFor(widget.postId);
@@ -540,20 +636,25 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child:
-                                  _commentImages[index] is Uint8List
-                                      ? Image.memory(
-                                        _commentImages[index] as Uint8List,
-                                        width: 48,
-                                        height: 48,
-                                        fit: BoxFit.cover,
-                                      )
-                                      : Image.file(
-                                        _commentImages[index] as File,
-                                        width: 48,
-                                        height: 48,
-                                        fit: BoxFit.cover,
-                                      ),
+                              child: GestureDetector(
+                                onTap:
+                                    () =>
+                                        _openImageViewer(_commentImages, index),
+                                child:
+                                    _commentImages[index] is Uint8List
+                                        ? Image.memory(
+                                          _commentImages[index] as Uint8List,
+                                          width: 48,
+                                          height: 48,
+                                          fit: BoxFit.cover,
+                                        )
+                                        : Image.file(
+                                          _commentImages[index] as File,
+                                          width: 48,
+                                          height: 48,
+                                          fit: BoxFit.cover,
+                                        ),
+                              ),
                             ),
                             Positioned(
                               top: 0,
@@ -836,19 +937,22 @@ class _CommentTileState extends State<_CommentTile> {
                 itemBuilder:
                     (context, index) => Padding(
                       padding: const EdgeInsets.only(right: 6, left: 38),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          comment.imageUrls[index],
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
-                          errorBuilder:
-                              (context, error, stackTrace) => Icon(
-                                Icons.broken_image,
-                                size: 24,
-                                color: theme.colorScheme.outline,
-                              ),
+                      child: GestureDetector(
+                        onTap: () => _openImageViewer(comment.imageUrls, index),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.network(
+                            comment.imageUrls[index],
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (context, error, stackTrace) => Icon(
+                                  Icons.broken_image,
+                                  size: 24,
+                                  color: theme.colorScheme.outline,
+                                ),
+                          ),
                         ),
                       ),
                     ),
