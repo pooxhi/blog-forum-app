@@ -217,63 +217,80 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                         ),
                                                   ),
                                             ),
-                                            Positioned(
-                                              left: 12,
-                                              right: 12,
-                                              bottom: 16,
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  if (post.imageUrls.length > 1)
-                                                    _circleIconButton(
-                                                      icon: Icons.chevron_left,
-                                                      onPressed: () {
-                                                        if (_currentImageIndex >
-                                                            0) {
-                                                          _imagePageController.animateToPage(
-                                                            _currentImageIndex -
-                                                                1,
-                                                            duration:
-                                                                const Duration(
-                                                                  milliseconds:
-                                                                      250,
-                                                                ),
-                                                            curve:
-                                                                Curves
-                                                                    .easeInOut,
-                                                          );
-                                                        }
-                                                      },
+                                            if (post.imageUrls.length > 1)
+                                              Positioned(
+                                                left: 12,
+                                                right: 12,
+                                                bottom: 16,
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Material(
+                                                      color: Colors.black54,
+                                                      shape:
+                                                          const CircleBorder(),
+                                                      child: IconButton(
+                                                        icon: const Icon(
+                                                          Icons.chevron_left,
+                                                          color: Colors.white,
+                                                          size: 24,
+                                                        ),
+                                                        onPressed: () {
+                                                          if (_currentImageIndex >
+                                                              0) {
+                                                            _imagePageController.animateToPage(
+                                                              _currentImageIndex -
+                                                                  1,
+                                                              duration:
+                                                                  const Duration(
+                                                                    milliseconds:
+                                                                        250,
+                                                                  ),
+                                                              curve:
+                                                                  Curves
+                                                                      .easeInOut,
+                                                            );
+                                                          }
+                                                        },
+                                                      ),
                                                     ),
-                                                  if (post.imageUrls.length > 1)
-                                                    _circleIconButton(
-                                                      icon: Icons.chevron_right,
-                                                      onPressed: () {
-                                                        if (_currentImageIndex <
-                                                            post
-                                                                    .imageUrls
-                                                                    .length -
-                                                                1) {
-                                                          _imagePageController.animateToPage(
-                                                            _currentImageIndex +
-                                                                1,
-                                                            duration:
-                                                                const Duration(
-                                                                  milliseconds:
-                                                                      250,
-                                                                ),
-                                                            curve:
-                                                                Curves
-                                                                    .easeInOut,
-                                                          );
-                                                        }
-                                                      },
+                                                    Material(
+                                                      color: Colors.black54,
+                                                      shape:
+                                                          const CircleBorder(),
+                                                      child: IconButton(
+                                                        icon: const Icon(
+                                                          Icons.chevron_right,
+                                                          color: Colors.white,
+                                                          size: 24,
+                                                        ),
+                                                        onPressed: () {
+                                                          if (_currentImageIndex <
+                                                              post
+                                                                      .imageUrls
+                                                                      .length -
+                                                                  1) {
+                                                            _imagePageController.animateToPage(
+                                                              _currentImageIndex +
+                                                                  1,
+                                                              duration:
+                                                                  const Duration(
+                                                                    milliseconds:
+                                                                        250,
+                                                                  ),
+                                                              curve:
+                                                                  Curves
+                                                                      .easeInOut,
+                                                            );
+                                                          }
+                                                        },
+                                                      ),
                                                     ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
                                             if (post.imageUrls.length > 1)
                                               Positioned(
                                                 bottom: 16,
