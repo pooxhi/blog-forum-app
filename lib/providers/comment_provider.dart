@@ -125,27 +125,24 @@ class CommentProvider extends ChangeNotifier {
 
   Future<String?> deleteComment(String commentId, String postId) async {
     try {
+      final images = await _supabase
+          .from('comment_images')
+          .select('image_url')
+          .eq('comment_id', commentId);
+      final paths =
+          (images as List)
+              .map((e) => (e['image_url'] as String).split('post-images/').last)
+              .toList();
+
+      if (paths.isNotEmpty) {
+        await _supabase.storage.from('post-images').remove(paths);
+      }
+
       await _supabase.from('comments').delete().eq('id', commentId);
       await fetchComments(postId);
       return null;
     } catch (e) {
       return 'Failed to delete comment';
-    }
-  }
-
-  Future<String?> deleteCommentImage(
-    String imageId,
-    String imageUrl,
-    String postId,
-  ) async {
-    try {
-      final path = imageUrl.split('post-images/').last;
-      await _supabase.storage.from('post-images').remove([path]);
-      await _supabase.from('comment_images').delete().eq('id', imageId);
-      await fetchComments(postId);
-      return null;
-    } catch (e) {
-      return 'Failed to delete image';
     }
   }
 

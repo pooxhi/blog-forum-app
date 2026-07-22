@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../providers/post_provider.dart';
+import '../../providers/auth_provider.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final String? postId;
@@ -38,16 +39,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Future<void> _loadExistingPost() async {
     setState(() => _isLoadingPost = true);
     final postProvider = context.read<PostProvider>();
+    final authProvider = context.read<AuthProvider>();
 
     final post = await postProvider.fetchPostById(widget.postId!);
     final images = await postProvider.fetchPostImages(widget.postId!);
 
     if (!mounted) return;
+
+    // Block access if this isn't the post's owner
+    if (post == null || post.userId != authProvider.user?.id) {
+      context.pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("You don't have permission to edit this post."),
+        ),
+      );
+      return;
+    }
+
     setState(() {
-      if (post != null) {
-        _titleController.text = post.title;
-        _contentController.text = post.content;
-      }
+      _titleController.text = post.title;
+      _contentController.text = post.content;
       _existingImages = images;
       _isLoadingPost = false;
     });

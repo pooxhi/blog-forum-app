@@ -66,6 +66,37 @@ class PostProvider extends ChangeNotifier {
 
   Future<String?> deletePost(String postId) async {
     try {
+      // Gather every image path tied to this post (its own images + all its comments' images)
+      final postImages = await _supabase
+          .from('post_images')
+          .select('image_url')
+          .eq('post_id', postId);
+      final comments = await _supabase
+          .from('comments')
+          .select('id')
+          .eq('post_id', postId);
+      final commentIds =
+          (comments as List).map((c) => c['id'] as String).toList();
+
+      List<dynamic> commentImages = [];
+      if (commentIds.isNotEmpty) {
+        commentImages = await _supabase
+            .from('comment_images')
+            .select('image_url')
+            .inFilter('comment_id', commentIds);
+      }
+
+      final allUrls = [
+        ...(postImages as List).map((e) => e['image_url'] as String),
+        ...commentImages.map((e) => e['image_url'] as String),
+      ];
+      final paths =
+          allUrls.map((url) => url.split('post-images/').last).toList();
+
+      if (paths.isNotEmpty) {
+        await _supabase.storage.from('post-images').remove(paths);
+      }
+
       await _supabase.from('posts').delete().eq('id', postId);
       _posts.removeWhere((p) => p.id == postId);
       notifyListeners();
