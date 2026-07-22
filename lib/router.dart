@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/posts/post_list_screen.dart';
-import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/posts/create_post_screen.dart';
 import 'screens/posts/post_detail_screen.dart';

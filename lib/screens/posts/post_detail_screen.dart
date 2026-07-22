@@ -172,160 +172,167 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   thumbVisibility: true,
                   child: SingleChildScrollView(
                     child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Hero image with overlaid controls + title
-                      Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(28),
-                              bottomRight: Radius.circular(28),
-                            ),
-                            child: SizedBox(
-                              height: imageHeight,
-                              width: double.infinity,
-                              child:
-                                  post.imageUrls.isNotEmpty
-                                      ? Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          PageView.builder(
-                                            itemCount: post.imageUrls.length,
-                                            itemBuilder:
-                                                (context, i) => Image.network(
-                                                  post.imageUrls[i],
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder:
-                                                      (
-                                                        context,
-                                                        error,
-                                                        stackTrace,
-                                                      ) => const Center(
-                                                        child: Icon(
-                                                          Icons.broken_image,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Hero image with overlaid controls + title
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(28),
+                                bottomRight: Radius.circular(28),
+                              ),
+                              child: SizedBox(
+                                height: imageHeight,
+                                width: double.infinity,
+                                child:
+                                    post.imageUrls.isNotEmpty
+                                        ? Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            PageView.builder(
+                                              itemCount: post.imageUrls.length,
+                                              itemBuilder:
+                                                  (context, i) => Image.network(
+                                                    post.imageUrls[i],
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder:
+                                                        (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) => const Center(
+                                                          child: Icon(
+                                                            Icons.broken_image,
+                                                          ),
                                                         ),
-                                                      ),
+                                                  ),
+                                            ),
+                                            DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.topCenter,
+                                                  end: Alignment.bottomCenter,
+                                                  stops: const [0.5, 1.0],
+                                                  colors: [
+                                                    Colors.transparent,
+                                                    Colors.black.withOpacity(
+                                                      0.8,
+                                                    ),
+                                                  ],
                                                 ),
-                                          ),
-                                          DecoratedBox(
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                begin: Alignment.topCenter,
-                                                end: Alignment.bottomCenter,
-                                                stops: const [0.5, 1.0],
-                                                colors: [
-                                                  Colors.transparent,
-                                                  Colors.black.withOpacity(0.8),
-                                                ],
                                               ),
                                             ),
-                                          ),
-                                        ],
-                                      )
-                                      : Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              theme.colorScheme.primary
-                                                  .withOpacity(0.85),
-                                              theme.colorScheme.secondary
-                                                  .withOpacity(0.65),
-                                            ],
+                                          ],
+                                        )
+                                        : Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                theme.colorScheme.primary
+                                                    .withOpacity(0.85),
+                                                theme.colorScheme.secondary
+                                                    .withOpacity(0.65),
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
+                              ),
                             ),
-                          ),
-                          // Floating back/edit/delete buttons over the hero
-                          Positioned(
-                            top: MediaQuery.of(context).padding.top + 8,
-                            left: 16,
-                            right: 16,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _circleIconButton(
-                                  icon: Icons.arrow_back,
-                                  onPressed: () => context.pop(),
-                                ),
-                                if (isOwner)
-                                  Row(
-                                    children: [
-                                      _circleIconButton(
-                                        icon: Icons.edit,
-                                        onPressed: () async {
-                                          await context.push(
-                                            '/edit-post/${widget.postId}',
-                                          );
-                                          _loadPost();
-                                        },
-                                      ),
-                                      const SizedBox(width: 8),
-                                      _circleIconButton(
-                                        icon: Icons.delete,
-                                        color: Colors.redAccent.shade100,
-                                        onPressed: _confirmDeletePost,
-                                      ),
-                                    ],
+                            // Floating back/edit/delete buttons over the hero
+                            Positioned(
+                              top: MediaQuery.of(context).padding.top + 8,
+                              left: 16,
+                              right: 16,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _circleIconButton(
+                                    icon: Icons.arrow_back,
+                                    onPressed: () => context.pop(),
                                   ),
-                              ],
-                            ),
-                          ),
-                          // Title overlaid at the bottom of the hero
-                          Positioned(
-                            left: 20,
-                            right: 20,
-                            bottom: 20,
-                            child: Text(
-                              post.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                                shadows: [
-                                  Shadow(color: Colors.black54, blurRadius: 8),
+                                  if (isOwner)
+                                    Row(
+                                      children: [
+                                        _circleIconButton(
+                                          icon: Icons.edit,
+                                          onPressed: () async {
+                                            await context.push(
+                                              '/edit-post/${widget.postId}',
+                                            );
+                                            _loadPost();
+                                          },
+                                        ),
+                                        const SizedBox(width: 8),
+                                        _circleIconButton(
+                                          icon: Icons.delete,
+                                          color: Colors.redAccent.shade100,
+                                          onPressed: _confirmDeletePost,
+                                        ),
+                                      ],
+                                    ),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              post.content,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                height: 1.5,
+                            // Title overlaid at the bottom of the hero
+                            Positioned(
+                              left: 20,
+                              right: 20,
+                              bottom: 20,
+                              child: Text(
+                                post.title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w800,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black54,
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 28),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.chat_bubble_outline,
-                                  size: 18,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Comments',
-                                  style: theme.textTheme.titleLarge,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 14),
-                            _buildCommentsList(authProvider),
                           ],
                         ),
-                      ),
-                    ],
+
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                post.content,
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.chat_bubble_outline,
+                                    size: 18,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Comments',
+                                    style: theme.textTheme.titleLarge,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              _buildCommentsList(authProvider),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
