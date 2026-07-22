@@ -1,7 +1,7 @@
-import 'dart:io';
-import 'package:uuid/uuid.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 import '../models/post.dart';
 
 class PostProvider extends ChangeNotifier {
@@ -78,13 +78,12 @@ class PostProvider extends ChangeNotifier {
   Future<String?> createPost({
     required String title,
     required String content,
-    required List<File> images,
+    required List<XFile> images,
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) return 'You must be logged in to post';
 
-      // 1. Insert the post row first to get its id
       final postData =
           await _supabase
               .from('posts')
@@ -94,14 +93,18 @@ class PostProvider extends ChangeNotifier {
 
       final postId = postData['id'] as String;
 
-      // 2. Upload each image to Storage, then insert a post_images row
       const uuid = Uuid();
       for (var i = 0; i < images.length; i++) {
-        final file = images[i];
-        final ext = file.path.split('.').last;
+        final xFile = images[i];
+        final ext =
+            xFile.name.contains('.') ? xFile.name.split('.').last : 'jpg';
         final fileName = '$userId/${uuid.v4()}.$ext';
 
-        await _supabase.storage.from('post-images').upload(fileName, file);
+        final bytes = await xFile.readAsBytes();
+        await _supabase.storage
+            .from('post-images')
+            .uploadBinary(fileName, bytes);
+
         final publicUrl = _supabase.storage
             .from('post-images')
             .getPublicUrl(fileName);
@@ -113,7 +116,6 @@ class PostProvider extends ChangeNotifier {
         });
       }
 
-      // 3. Refresh the list so the new post shows up
       await fetchInitialPosts();
       return null;
     } catch (e) {
@@ -135,7 +137,6 @@ class PostProvider extends ChangeNotifier {
     }
   }
 
-  // Get existing images (with their row IDs, needed to delete individually)
   Future<List<Map<String, dynamic>>> fetchPostImages(String postId) async {
     final data = await _supabase
         .from('post_images')
@@ -147,7 +148,6 @@ class PostProvider extends ChangeNotifier {
 
   Future<String?> deletePostImage(String imageId, String imageUrl) async {
     try {
-      // Extract the storage path from the public URL
       final path = imageUrl.split('post-images/').last;
       await _supabase.storage.from('post-images').remove([path]);
       await _supabase.from('post_images').delete().eq('id', imageId);
@@ -161,7 +161,7 @@ class PostProvider extends ChangeNotifier {
     required String postId,
     required String title,
     required String content,
-    required List<File> newImages,
+    required List<XFile> newImages,
     required int existingImageCount,
   }) async {
     try {
@@ -173,11 +173,16 @@ class PostProvider extends ChangeNotifier {
       final userId = _supabase.auth.currentUser?.id;
       const uuid = Uuid();
       for (var i = 0; i < newImages.length; i++) {
-        final file = newImages[i];
-        final ext = file.path.split('.').last;
+        final xFile = newImages[i];
+        final ext =
+            xFile.name.contains('.') ? xFile.name.split('.').last : 'jpg';
         final fileName = '$userId/${uuid.v4()}.$ext';
 
-        await _supabase.storage.from('post-images').upload(fileName, file);
+        final bytes = await xFile.readAsBytes();
+        await _supabase.storage
+            .from('post-images')
+            .uploadBinary(fileName, bytes);
+
         final publicUrl = _supabase.storage
             .from('post-images')
             .getPublicUrl(fileName);

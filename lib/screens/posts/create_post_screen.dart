@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../providers/post_provider.dart';
 
 class CreatePostScreen extends StatefulWidget {
-  final String? postId; // null = create mode, non-null = edit mode
+  final String? postId;
 
   const CreatePostScreen({super.key, this.postId});
 
@@ -20,8 +22,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  final List<File> _newImages = [];
-  List<Map<String, dynamic>> _existingImages = []; // {id, image_url, position}
+  final List<XFile> _newImages = [];
+  List<Map<String, dynamic>> _existingImages = [];
   bool _isSubmitting = false;
   bool _isLoadingPost = false;
 
@@ -60,9 +62,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<void> _pickImages() async {
     final picker = ImagePicker();
-    final picked = await picker.pickMultiImage();
-    if (picked.isNotEmpty) {
-      setState(() => _newImages.addAll(picked.map((x) => File(x.path))));
+
+    try {
+      final picked = await picker.pickMultiImage();
+      if (picked.isNotEmpty) {
+        setState(() => _newImages.addAll(picked));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unable to pick images right now: $e')),
+      );
     }
   }
 
@@ -117,9 +127,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     if (error == null) {
       if (widget.isEditMode) {
-        context.pop(); // go back to the detail screen, keep back stack intact
+        context.pop();
       } else {
-        context.go('/'); // create mode: go to list
+        context.go('/');
       }
     } else {
       ScaffoldMessenger.of(
@@ -212,7 +222,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                             itemCount: _newImages.length,
                             itemBuilder:
                                 (context, index) => _ImageThumb(
-                                  file: _newImages[index],
+                                  xFile: _newImages[index],
                                   onRemove: () => _removeNewImage(index),
                                 ),
                           ),
@@ -246,34 +256,64 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 }
 
 class _ImageThumb extends StatelessWidget {
-  final File? file;
+  final XFile? xFile;
   final String? imageUrl;
   final VoidCallback onRemove;
 
-  const _ImageThumb({this.file, this.imageUrl, required this.onRemove});
+  const _ImageThumb({this.xFile, this.imageUrl, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
+    Widget imageWidget;
+
+    if (xFile != null) {
+      if (kIsWeb) {
+        imageWidget = FutureBuilder<Uint8List>(
+          future: xFile!.readAsBytes(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              );
+            }
+            if (snapshot.hasError || !snapshot.hasData) {
+              return const Icon(Icons.broken_image, size: 40);
+            }
+
+            return Image.memory(
+              snapshot.data!,
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+            );
+          },
+        );
+      } else {
+        imageWidget = Image.file(
+          File(xFile!.path),
+          width: 100,
+          height: 100,
+          fit: BoxFit.cover,
+        );
+      }
+    } else {
+      imageWidget = Image.network(
+        imageUrl!,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder:
+            (context, error, _) => const Icon(Icons.broken_image, size: 40),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Stack(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child:
-                file != null
-                    ? Image.file(
-                      file!,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    )
-                    : Image.network(
-                      imageUrl!,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    ),
+            child: SizedBox(width: 100, height: 100, child: imageWidget),
           ),
           Positioned(
             top: 2,
