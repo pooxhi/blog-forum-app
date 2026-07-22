@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -25,7 +27,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   int _currentImageIndex = 0;
 
   final _commentController = TextEditingController();
-  final List<File> _commentImages = [];
+  final List<dynamic> _commentImages = [];
   bool _isSubmittingComment = false;
 
   @override
@@ -100,7 +102,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickMultiImage();
     if (picked.isNotEmpty) {
-      setState(() => _commentImages.addAll(picked.map((x) => File(x.path))));
+      if (kIsWeb) {
+        final bytesList = <Uint8List>[];
+        for (final x in picked) {
+          final b = await x.readAsBytes();
+          bytesList.add(b);
+        }
+        setState(() => _commentImages.addAll(bytesList));
+      } else {
+        setState(() => _commentImages.addAll(picked.map((x) => File(x.path))));
+      }
     }
   }
 
@@ -511,6 +522,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_isSubmittingComment)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8.0),
+                child: LinearProgressIndicator(minHeight: 3),
+              ),
             if (_commentImages.isNotEmpty)
               SizedBox(
                 height: 56,
@@ -524,12 +540,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: Image.file(
-                                _commentImages[index],
-                                width: 48,
-                                height: 48,
-                                fit: BoxFit.cover,
-                              ),
+                              child:
+                                  _commentImages[index] is Uint8List
+                                      ? Image.memory(
+                                        _commentImages[index] as Uint8List,
+                                        width: 48,
+                                        height: 48,
+                                        fit: BoxFit.cover,
+                                      )
+                                      : Image.file(
+                                        _commentImages[index] as File,
+                                        width: 48,
+                                        height: 48,
+                                        fit: BoxFit.cover,
+                                      ),
                             ),
                             Positioned(
                               top: 0,
@@ -557,13 +581,31 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               ),
             Row(
               children: [
-                IconButton(
-                  icon: Icon(
-                    Icons.image_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
-                  onPressed: _pickCommentImages,
-                ),
+                _isSubmittingComment
+                    ? Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: Center(
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    : IconButton(
+                      icon: Icon(
+                        Icons.image_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                      onPressed: _pickCommentImages,
+                    ),
                 Expanded(
                   child: TextField(
                     controller: _commentController,

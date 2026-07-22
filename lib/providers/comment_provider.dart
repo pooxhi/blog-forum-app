@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
+import 'dart:typed_data';
 import '../models/comment.dart';
 
 class CommentProvider extends ChangeNotifier {
@@ -42,7 +45,7 @@ class CommentProvider extends ChangeNotifier {
   Future<String?> addComment({
     required String postId,
     required String content,
-    required List<File> images,
+    required List<dynamic> images,
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
@@ -63,11 +66,28 @@ class CommentProvider extends ChangeNotifier {
 
       const uuid = Uuid();
       for (var i = 0; i < images.length; i++) {
-        final file = images[i];
-        final ext = file.path.split('.').last;
-        final fileName = '$userId/${uuid.v4()}.$ext';
+        final img = images[i];
+        final fileName = () {
+          final ext = img is File ? img.path.split('.').last : 'png';
+          return '$userId/${uuid.v4()}.$ext';
+        }();
 
-        await _supabase.storage.from('post-images').upload(fileName, file);
+        if (kIsWeb) {
+          Uint8List bytes;
+          if (img is Uint8List) {
+            bytes = img;
+          } else {
+            bytes = await (img as XFile).readAsBytes();
+          }
+          await _supabase.storage
+              .from('post-images')
+              .uploadBinary(fileName, bytes);
+        } else {
+          await _supabase.storage
+              .from('post-images')
+              .upload(fileName, img as File);
+        }
+
         final publicUrl = _supabase.storage
             .from('post-images')
             .getPublicUrl(fileName);
@@ -132,15 +152,37 @@ class CommentProvider extends ChangeNotifier {
   Future<String?> addImageToComment({
     required String commentId,
     required String postId,
-    required File image,
+    required dynamic image,
     required int position,
   }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
-      final ext = image.path.split('.').last;
-      final fileName = '$userId/${const Uuid().v4()}.$ext';
+      final fileName = () {
+        final ext =
+            image is File
+                ? image.path.split('.').last
+                : (image is Uint8List ? 'png' : 'png');
+        return '$userId/${const Uuid().v4()}.$ext';
+      }();
 
-      await _supabase.storage.from('post-images').upload(fileName, image);
+      if (kIsWeb) {
+        Uint8List bytes;
+        if (image is Uint8List) {
+          bytes = image;
+        } else if (image is XFile) {
+          bytes = await image.readAsBytes();
+        } else {
+          throw Exception('Unsupported image type for web');
+        }
+        await _supabase.storage
+            .from('post-images')
+            .uploadBinary(fileName, bytes);
+      } else {
+        await _supabase.storage
+            .from('post-images')
+            .upload(fileName, image as File);
+      }
+
       final publicUrl = _supabase.storage
           .from('post-images')
           .getPublicUrl(fileName);
