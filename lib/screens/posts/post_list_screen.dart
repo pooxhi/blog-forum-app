@@ -114,19 +114,55 @@ class _PostListScreenState extends State<PostListScreen> {
       return const Center(child: Text('No posts yet.'));
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + kToolbarHeight + 12,
-        left: 12,
-        right: 12,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1400),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isWide = constraints.maxWidth >= 900;
+            final crossAxisCount = constraints.maxWidth >= 1400 ? 3 : 2;
+
+            if (isWide) {
+              return GridView.builder(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + kToolbarHeight + 12,
+                  left: 12,
+                  right: 12,
+                  bottom: 12,
+                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 0.9,
+                ),
+                itemCount: postProvider.posts.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == postProvider.posts.length) {
+                    return Center(child: _buildLoadMoreButton(postProvider));
+                  }
+                  return _PostCard(post: postProvider.posts[index]);
+                },
+              );
+            }
+
+            return ListView.builder(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + kToolbarHeight + 12,
+                left: 12,
+                right: 12,
+              ),
+              itemCount: postProvider.posts.length + 1,
+              itemBuilder: (context, index) {
+                if (index == postProvider.posts.length) {
+                  return _buildLoadMoreButton(postProvider);
+                }
+                return _PostCard(post: postProvider.posts[index]);
+              },
+            );
+          },
+        ),
       ),
-      itemCount: postProvider.posts.length + 1,
-      itemBuilder: (context, index) {
-        if (index == postProvider.posts.length) {
-          return _buildLoadMoreButton(postProvider);
-        }
-        return _PostCard(post: postProvider.posts[index]);
-      },
     );
   }
 
