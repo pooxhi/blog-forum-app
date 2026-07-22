@@ -221,7 +221,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                               Positioned(
                                                 left: 12,
                                                 right: 12,
-                                                bottom: 16,
+                                                top: imageHeight / 2 - 24,
                                                 child: Row(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment
@@ -231,61 +231,71 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                       color: Colors.black54,
                                                       shape:
                                                           const CircleBorder(),
-                                                      child: IconButton(
-                                                        icon: const Icon(
-                                                          Icons.chevron_left,
-                                                          color: Colors.white,
-                                                          size: 24,
+                                                      child: MouseRegion(
+                                                        cursor:
+                                                            SystemMouseCursors
+                                                                .click,
+                                                        child: IconButton(
+                                                          icon: const Icon(
+                                                            Icons.chevron_left,
+                                                            color: Colors.white,
+                                                            size: 24,
+                                                          ),
+                                                          onPressed: () {
+                                                            if (_currentImageIndex >
+                                                                0) {
+                                                              _imagePageController.animateToPage(
+                                                                _currentImageIndex -
+                                                                    1,
+                                                                duration:
+                                                                    const Duration(
+                                                                      milliseconds:
+                                                                          250,
+                                                                    ),
+                                                                curve:
+                                                                    Curves
+                                                                        .easeInOut,
+                                                              );
+                                                            }
+                                                          },
                                                         ),
-                                                        onPressed: () {
-                                                          if (_currentImageIndex >
-                                                              0) {
-                                                            _imagePageController.animateToPage(
-                                                              _currentImageIndex -
-                                                                  1,
-                                                              duration:
-                                                                  const Duration(
-                                                                    milliseconds:
-                                                                        250,
-                                                                  ),
-                                                              curve:
-                                                                  Curves
-                                                                      .easeInOut,
-                                                            );
-                                                          }
-                                                        },
                                                       ),
                                                     ),
                                                     Material(
                                                       color: Colors.black54,
                                                       shape:
                                                           const CircleBorder(),
-                                                      child: IconButton(
-                                                        icon: const Icon(
-                                                          Icons.chevron_right,
-                                                          color: Colors.white,
-                                                          size: 24,
+                                                      child: MouseRegion(
+                                                        cursor:
+                                                            SystemMouseCursors
+                                                                .click,
+                                                        child: IconButton(
+                                                          icon: const Icon(
+                                                            Icons.chevron_right,
+                                                            color: Colors.white,
+                                                            size: 24,
+                                                          ),
+                                                          onPressed: () {
+                                                            if (_currentImageIndex <
+                                                                post
+                                                                        .imageUrls
+                                                                        .length -
+                                                                    1) {
+                                                              _imagePageController.animateToPage(
+                                                                _currentImageIndex +
+                                                                    1,
+                                                                duration:
+                                                                    const Duration(
+                                                                      milliseconds:
+                                                                          250,
+                                                                    ),
+                                                                curve:
+                                                                    Curves
+                                                                        .easeInOut,
+                                                              );
+                                                            }
+                                                          },
                                                         ),
-                                                        onPressed: () {
-                                                          if (_currentImageIndex <
-                                                              post
-                                                                      .imageUrls
-                                                                      .length -
-                                                                  1) {
-                                                            _imagePageController.animateToPage(
-                                                              _currentImageIndex +
-                                                                  1,
-                                                              duration:
-                                                                  const Duration(
-                                                                    milliseconds:
-                                                                        250,
-                                                                  ),
-                                                              curve:
-                                                                  Curves
-                                                                      .easeInOut,
-                                                            );
-                                                          }
-                                                        },
                                                       ),
                                                     ),
                                                   ],
@@ -323,18 +333,20 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                   ),
                                                 ),
                                               ),
-                                            DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  begin: Alignment.topCenter,
-                                                  end: Alignment.bottomCenter,
-                                                  stops: const [0.5, 1.0],
-                                                  colors: [
-                                                    Colors.transparent,
-                                                    Colors.black.withOpacity(
-                                                      0.8,
-                                                    ),
-                                                  ],
+                                            IgnorePointer(
+                                              child: DecoratedBox(
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                    stops: const [0.5, 1.0],
+                                                    colors: [
+                                                      Colors.transparent,
+                                                      Colors.black.withOpacity(
+                                                        0.8,
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
