@@ -764,6 +764,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 }
 
+class _CommentTile extends StatefulWidget {
+  final Comment comment;
+  final bool isOwner;
+  final String postId;
+
+  const _CommentTile({required this.comment, required this.isOwner, required this.postId});
+
+  @override
+  State<_CommentTile> createState() => _CommentTileState();
+}
+
 class _CommentTileState extends State<_CommentTile> {
   bool _isEditing = false;
   late TextEditingController _editController;
@@ -941,204 +952,6 @@ class _CommentTileState extends State<_CommentTile> {
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _CommentTileState extends State<_CommentTile> {
-  bool _isEditing = false;
-  late TextEditingController _editController;
-
-  @override
-  void initState() {
-    super.initState();
-    _editController = TextEditingController(text: widget.comment.content);
-  }
-
-  @override
-  void dispose() {
-    _editController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _saveEdit() async {
-    final error = await context.read<CommentProvider>().updateComment(
-      commentId: widget.comment.id,
-      postId: widget.postId,
-      content: _editController.text.trim(),
-    );
-    if (!mounted) return;
-    if (error == null) {
-      setState(() => _isEditing = false);
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error)));
-    }
-  }
-
-  Future<void> _deleteComment() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Delete comment?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    await context.read<CommentProvider>().deleteComment(
-      widget.comment.id,
-      widget.postId,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final comment = widget.comment;
-    final theme = Theme.of(context);
-    final tileColor =
-        theme.brightness == Brightness.dark
-            ? theme.colorScheme.surfaceContainerHighest
-            : theme.colorScheme.surfaceContainerLow;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: tileColor,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_isEditing)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: _editController,
-                  decoration: const InputDecoration(isDense: true),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => setState(() => _isEditing = false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(onPressed: _saveEdit, child: const Text('Save')),
-                  ],
-                ),
-              ],
-            )
-          else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
-                  child: Icon(
-                    Icons.person,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    comment.content,
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ),
-                if (widget.isOwner) ...[
-                  GestureDetector(
-                    onTap: () => setState(() => _isEditing = true),
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Icon(
-                        Icons.edit,
-                        size: 16,
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: _deleteComment,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Icon(
-                        Icons.delete,
-                        size: 16,
-                        color: theme.colorScheme.outline,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          if (comment.imageUrls.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 56,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: comment.imageUrls.length,
-                itemBuilder:
-                    (context, index) => Padding(
-                      padding: const EdgeInsets.only(right: 6, left: 38),
-                      child: GestureDetector(
-                        onTap:
-                            () => showDialog(
-                              context: context,
-                              builder:
-                                  (context) => Dialog(
-                                    insetPadding: const EdgeInsets.all(12),
-                                    backgroundColor: Colors.transparent,
-                                    child: _ImageViewer(
-                                      images: comment.imageUrls,
-                                      initialPage: index,
-                                    ),
-                                  ),
-                            ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.network(
-                            comment.imageUrls[index],
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (context, error, stackTrace) => Icon(
-                                  Icons.broken_image,
-                                  size: 24,
-                                  color: theme.colorScheme.outline,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
               ),
             ),
           ],
