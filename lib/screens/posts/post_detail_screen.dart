@@ -764,17 +764,6 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 }
 
-class _CommentTile extends StatefulWidget {
-  final Comment comment;
-  final bool isOwner;
-  final String postId;
-
-  const _CommentTile({required this.comment, required this.isOwner, required this.postId});
-
-  @override
-  State<_CommentTile> createState() => _CommentTileState();
-}
-
 class _CommentTileState extends State<_CommentTile> {
   bool _isEditing = false;
   late TextEditingController _editController;
